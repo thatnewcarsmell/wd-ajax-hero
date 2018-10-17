@@ -1,9 +1,9 @@
-(function() {
+(function () {
   'use strict';
 
   const movies = [];
 
-  const renderMovies = function() {
+  const renderMovies = function () {
     $('#listings').empty();
 
     for (const movie of movies) {
@@ -17,7 +17,9 @@
         'data-tooltip': movie.title
       });
 
-      $title.tooltip({ delay: 50 }).text(movie.title);
+      $title.tooltip({
+        delay: 50
+      }).text(movie.title);
 
       const $poster = $('<img>').addClass('poster');
 
@@ -56,5 +58,63 @@
     }
   };
 
-  // ADD YOUR CODE HERE
+  var inputField = document.getElementById('search');
+  var searchButton = document.querySelector('button');
+
+  searchButton.addEventListener('click', callMyAPI);
+
+  function callMyAPI() {
+    let results = [];
+    event.preventDefault();
+    let APICall = formatURL(checkMyInput());
+    if (APICall === undefined) {
+      return console.log('Enter some damn text!');
+    }
+    movies.length = 0;
+    fetch(APICall)
+      .then((response) => response.json())
+      .then((data) => {
+        let results = data.Search;
+        results.reduce((tally, movie) => {
+          movies.push({
+            id: movie.imdbID,
+            poster: movie.Poster,
+            title: movie.Title,
+            year: movie.Year,
+          })
+          return tally;
+        }, []);
+        renderMovies();
+      })
+  };
+
+  function checkMyInput() {
+    event.preventDefault();
+    let keywords = "";
+    if (inputField.value !== "") {
+      keywords = inputField.value;
+      inputField.value = "";
+      inputField.setAttribute('placeholder', 'Enter movie title e.g. Jumanji');
+      return keywords;
+    } else {
+      inputField.setAttribute('placeholder', 'Please enter keywords to search for a movie...');
+      return;
+    }
+  }
+
+  function formatURL(stringToFormat) {
+    let APICall = 'https://omdb-api.now.sh/?s='
+    if (stringToFormat === undefined) {
+      return;
+    }
+    for (let i = 0; i < stringToFormat.length; i++) {
+      if (stringToFormat[i] !== " ") {
+        APICall += stringToFormat[i];
+      } else if (stringToFormat[i] === " ") {
+        APICall += "+";
+      }
+    }
+    return APICall;
+  }
+
 })();
